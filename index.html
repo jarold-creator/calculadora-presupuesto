@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Presupuesto Personal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        bg: 'var(--bg)',
+                        surface: 'var(--surface)',
+                        'surface-elevated': 'var(--surface-elevated)',
+                        border: 'var(--border)',
+                        'text-primary': 'var(--text-primary)',
+                        'text-secondary': 'var(--text-secondary)',
+                        income: '#22c55e',
+                        expense: '#ef4444',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --bg: #0f0f0f;
+            --surface: #1a1a1a;
+            --surface-elevated: #252525;
+            --border: #333333;
+            --text-primary: #f5f5f5;
+            --text-secondary: #a0a0a0;
+        }
+
+        .light {
+            --bg: #f5f5f5;
+            --surface: #ffffff;
+            --surface-elevated: #e5e5e5;
+            --border: #d4d4d4;
+            --text-primary: #1a1a1a;
+            --text-secondary: #525252;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+
+        /* Animaciones globales */
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-scale-in {
+            animation: scaleIn 0.3s ease-out;
+        }
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* Cards con mejor hover */
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Inputs mejorados */
+        .input-dark {
+            background-color: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+        }
+        .input-dark:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+            transform: translateY(-1px);
+        }
+        .input-dark::placeholder {
+            color: #666666;
+        }
+
+        /* Tabla con transiciones */
+        table {
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        .row-animate {
+            animation: rowFadeIn 0.3s ease-out;
+        }
+        @keyframes rowFadeIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        /* Checkbox personalizado */
+        .custom-checkbox {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        .custom-checkbox:checked {
+            background-color: #22c55e;
+            border-color: #22c55e;
+        }
+        .custom-checkbox:checked::after {
+            content: '✓';
+            position: absolute;
+            color: white;
+            font-size: 12px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* Toast animations */
+        .toast {
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+
+        .animate-scale-out {
+            animation: scaleOut 0.2s ease-in forwards;
+        }
+        @keyframes scaleOut {
+            from { opacity: 1; transform: scale(1); }
+            to { opacity: 0; transform: scale(0.95); }
+        }
+
+        /* Modal backdrop blur */
+        .modal-backdrop {
+            backdrop-filter: blur(4px);
+        }
+
+        /* Botones con mejor feedback */
+        .btn-hover {
+            transition: all 0.2s ease;
+        }
+        .btn-hover:active {
+            transform: scale(0.96);
+        }
+
+        /* Scrollbar personalizado */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--surface);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Tooltips modernos */
+        .tooltip {
+            position: relative;
+        }
+        .tooltip::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-8px);
+            background: #1a1a1a;
+            color: #f5f5f5;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            pointer-events: none;
+        }
+        .light .tooltip::after {
+            background: #333;
+            color: #fff;
+        }
+        .tooltip:hover::after {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-4px);
+        }
+        .tooltip-top::after {
+            bottom: auto;
+            top: 100%;
+            transform: translateX(-50%) translateY(8px);
+        }
+        .tooltip-top:hover::after {
+            transform: translateX(-50%) translateY(4px);
+        }
+    </style>
+</head>
+<body class="bg-bg text-text-primary min-h-screen">
+    <header class="bg-surface border-b border-border py-6">
+        <div class="container mx-auto px-4 flex items-center justify-between">
+            <div class="flex-1"></div>
+            <h1 class="text-2xl md:text-3xl font-bold text-center">Calculadora de Presupuesto</h1>
+            <div class="flex-1 flex justify-end items-center gap-2">
+                <div id="profile-selector"></div>
+                <button id="theme-toggle" class="p-2 rounded-lg hover:bg-surface-elevated transition-all" title="Cambiar tema">
+                    <svg id="sun-icon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+                    </svg>
+                    <svg id="moon-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+        <!-- Resumen Cards -->
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div class="bg-surface rounded-xl p-6 border border-border shadow-lg card-hover transition-all">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-text-secondary text-sm">Balance Total</p>
+                        <p id="balance-total" class="text-2xl font-bold">$0.00</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-surface rounded-xl p-6 border border-border shadow-lg card-hover transition-all">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-income/20 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-income" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-text-secondary text-sm">Total Ingresos</p>
+                        <p id="total-ingresos" class="text-2xl font-bold text-income">$0.00</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-surface rounded-xl p-6 border border-border shadow-lg card-hover transition-all">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-expense/20 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-expense" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 13l-5 5m0 0l-5-5m5 5V6"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-text-secondary text-sm">Total Gastos</p>
+                        <p id="total-gastos" class="text-2xl font-bold text-expense">$0.00</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Formulario y Gráfico -->
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <!-- Formulario -->
+            <div class="bg-surface rounded-xl p-6 border border-border shadow-lg">
+                <h2 class="text-xl font-semibold mb-6">Agregar Transacción</h2>
+                <form id="transaction-form" class="space-y-4">
+                    <div>
+                        <label for="descripcion" class="block text-sm text-text-secondary mb-2">Descripción</label>
+                        <input
+                            type="text"
+                            id="descripcion"
+                            name="descripcion"
+                            required
+                            maxlength="100"
+                            placeholder="Ej: Salario, Rentación, Comida..."
+                            class="w-full px-4 py-3 rounded-lg input-dark transition-all"
+                        >
+                    </div>
+
+                    <div>
+                        <label for="monto" class="block text-sm text-text-secondary mb-2">Monto</label>
+                        <input
+                            type="text"
+                            id="monto"
+                            name="monto"
+                            required
+                            inputmode="numeric"
+                            placeholder="Ej: 1.000"
+                            class="w-full px-4 py-3 rounded-lg input-dark transition-all"
+                        >
+                    </div>
+
+                    <div>
+                        <label for="categoria" class="block text-sm text-text-secondary mb-2">Categoría</label>
+                        <select
+                            id="categoria"
+                            name="categoria"
+                            required
+                            class="w-full px-4 py-3 rounded-lg input-dark transition-all"
+                        >
+                            <option value="">Seleccionar categoría</option>
+                            <option value="Vivienda">Vivienda</option>
+                            <option value="Comida">Comida</option>
+                            <option value="Transporte">Transporte</option>
+                            <option value="Servicios">Servicios</option>
+                            <option value="Entretenimiento">Entretenimiento</option>
+                            <option value="Salud">Salud</option>
+                            <option value="Educación">Educación</option>
+                            <option value="Otros">Otros</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm text-text-secondary mb-3">Tipo de Transacción</label>
+                        <div class="flex gap-4">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="tipo" value="ingreso" class="w-4 h-4 text-income accent-income" checked>
+                                <span class="text-income font-medium">Ingreso</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="tipo" value="gasto" class="w-4 h-4 text-expense accent-expense">
+                                <span class="text-expense font-medium">Gasto</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg transition-all mt-6"
+                    >
+                        Agregar Transacción
+                    </button>
+                </form>
+            </div>
+
+            <!-- Gráfico -->
+            <div class="bg-surface rounded-xl p-6 border border-border shadow-lg">
+                <h2 class="text-xl font-semibold mb-6">Gastos por Categoría</h2>
+                <div class="relative h-64 md:h-80">
+                    <canvas id="expense-chart"></canvas>
+                </div>
+                <p id="chart-empty" class="text-center text-text-secondary mt-4 hidden">No hay gastos registrados</p>
+            </div>
+        </section>
+
+        
+
+        <!-- Tabla de Transacciones -->
+        <section class="bg-surface rounded-xl p-6 border border-border shadow-lg">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
+                <h2 class="text-xl font-semibold">Historial de Transacciones</h2>
+                <div class="flex items-center gap-4">
+                    <select id="sort-select" class="px-3 py-2 rounded-lg bg-surface-elevated border border-border text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="amount-desc">Mayor monto</option>
+                        <option value="amount-asc">Menor monto</option>
+                        <option value="date-desc">Más reciente</option>
+                        <option value="date-asc">Más antiguo</option>
+                    </select>
+                    <button id="reiniciar-mes" class="text-sm text-blue-500 hover:text-blue-400 transition-all">
+                        Reiniciar mes
+                    </button>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full min-w-600">
+                    <thead>
+                        <tr class="border-b border-border">
+                            <th class="text-center py-3 px-4 text-text-secondary font-medium">Check</th>
+                            <th class="text-left py-3 px-4 text-text-secondary font-medium">Fecha</th>
+                            <th class="text-left py-3 px-4 text-text-secondary font-medium">Descripción</th>
+                            <th class="text-left py-3 px-4 text-text-secondary font-medium">Categoría</th>
+                            <th class="text-right py-3 px-4 text-text-secondary font-medium">Monto</th>
+                            <th class="text-center py-3 px-4 text-text-secondary font-medium">Tipo</th>
+                            <th class="text-center py-3 px-4 text-text-secondary font-medium">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactions-table">
+                    </tbody>
+                </table>
+            </div>
+
+            <p id="table-empty" class="text-center text-text-secondary py-8 hidden">
+                No hay transacciones registradas. ¡Agrega tu primera transacción!
+            </p>
+
+            <!-- Paginación -->
+            <div id="pagination" class="flex items-center justify-between mt-6 pt-4 border-t border-border hidden">
+                <div class="text-sm text-text-secondary">
+                    Mostrando <span id="pagination-start">1</span>-<span id="pagination-end">10</span> de <span id="pagination-total">0</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="prev-page" class="p-2 rounded-lg hover:bg-surface-elevated disabled:opacity-50 disabled:cursor-not-allowed transition-all" disabled>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                    </button>
+                    <div id="pagination-pages" class="flex gap-1">
+                    </div>
+                    <button id="next-page" class="p-2 rounded-lg hover:bg-surface-elevated disabled:opacity-50 disabled:cursor-not-allowed transition-all" disabled>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-surface border-t border-border py-6 mt-8">
+        <div class="container mx-auto px-4 text-center text-text-secondary text-sm">
+            <p>Calculadora de Presupuesto Personal &copy; 2026</p>
+        </div>
+    </footer>
+
+    <!-- Modal de Edición -->
+    <div id="edit-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-surface rounded-xl p-6 border border-border shadow-xl w-full max-w-md">
+            <h3 class="text-xl font-semibold mb-6">Editar Transacción</h3>
+            <form id="edit-form" class="space-y-4">
+                <input type="hidden" id="edit-id">
+                <div>
+                    <label for="edit-descripcion" class="block text-sm text-text-secondary mb-2">Descripción</label>
+                    <input
+                        type="text"
+                        id="edit-descripcion"
+                        required
+                        class="w-full px-4 py-3 rounded-lg input-dark transition-all"
+                    >
+                </div>
+                <div>
+                    <label for="edit-monto" class="block text-sm text-text-secondary mb-2">Monto</label>
+                    <input
+                        type="text"
+                        id="edit-monto"
+                        required
+                        inputmode="numeric"
+                        placeholder="Ej: 2.000.000"
+                        class="w-full px-4 py-3 rounded-lg input-dark transition-all"
+                    >
+                </div>
+                <div>
+                    <label for="edit-categoria" class="block text-sm text-text-secondary mb-2">Categoría</label>
+                    <select
+                        id="edit-categoria"
+                        required
+                        class="w-full px-4 py-3 rounded-lg input-dark transition-all"
+                    >
+                        <option value="">Seleccionar categoría</option>
+                        <option value="Vivienda">Vivienda</option>
+                        <option value="Comida">Comida</option>
+                        <option value="Transporte">Transporte</option>
+                        <option value="Servicios">Servicios</option>
+                        <option value="Entretenimiento">Entretenimiento</option>
+                        <option value="Salud">Salud</option>
+                        <option value="Educación">Educación</option>
+                        <option value="Otros">Otros</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm text-text-secondary mb-3">Tipo de Transacción</label>
+                    <div class="flex gap-4">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="edit-tipo" value="ingreso" class="w-4 h-4 text-income accent-income">
+                            <span class="text-income font-medium">Ingreso</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="edit-tipo" value="gasto" class="w-4 h-4 text-expense accent-expense">
+                            <span class="text-expense font-medium">Gasto</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="flex gap-3 mt-6">
+                    <button
+                        type="button"
+                        id="cancel-edit"
+                        class="flex-1 bg-surface-elevated hover:bg-border text-text-primary font-semibold py-3 px-6 rounded-lg transition-all"
+                    >
+                        Cancelar
+                    </button>
+                    <button
+                        type="submit"
+                        class="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg transition-all"
+                    >
+                        Guardar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Crear Perfil -->
+    <div id="create-profile-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-surface rounded-xl p-6 border border-border shadow-xl w-full max-w-sm">
+            <h3 class="text-xl font-semibold mb-2">Nuevo Perfil</h3>
+            <p class="text-sm text-text-secondary mb-6">Ingresa un nombre para el nuevo perfil</p>
+            <form id="create-profile-form">
+                <div class="mb-6">
+                    <input
+                        type="text"
+                        id="new-profile-name"
+                        required
+                        placeholder="Ej: Juan, María, Trabajo..."
+                        class="w-full px-4 py-3 rounded-lg input-dark transition-all"
+                        autocomplete="off"
+                    >
+                </div>
+                <div class="flex gap-3">
+                    <button
+                        type="button"
+                        id="cancel-create-profile"
+                        class="flex-1 bg-surface-elevated hover:bg-border text-text-primary font-semibold py-3 px-6 rounded-lg transition-all"
+                    >
+                        Cancelar
+                    </button>
+                    <button
+                        type="submit"
+                        class="flex-1 bg-income hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg transition-all"
+                    >
+                        Crear
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Contenedor de Alerts/Toasts -->
+    <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
