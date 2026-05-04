@@ -235,68 +235,95 @@
         .tooltip-top:hover::after {
             transform: translateX(-50%) translateY(4px);
         }
+
+        /* Mejoras táctiles */
+        @media (max-width: 768px) {
+            body {
+                -webkit-tap-highlight-color: transparent;
+            }
+            
+            input, select, button {
+                min-height: 44px;
+            }
+
+            .btn-hover {
+                -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+            }
+
+            input[type="checkbox"] {
+                min-width: 44px;
+                min-height: 44px;
+                padding: 0;
+            }
+
+            input[type="radio"] {
+                min-width: 20px;
+                min-height: 20px;
+            }
+        }
     </style>
 </head>
 <body class="bg-bg text-text-primary min-h-screen">
-    <header class="bg-surface border-b border-border py-6">
-        <div class="container mx-auto px-4 flex items-center justify-between">
-            <div class="flex-1"></div>
-            <h1 class="text-2xl md:text-3xl font-bold text-center">Calculadora de Presupuesto</h1>
-            <div class="flex-1 flex justify-end items-center gap-2">
-                <div id="profile-selector"></div>
-                <button id="theme-toggle" class="p-2 rounded-lg hover:bg-surface-elevated transition-all" title="Cambiar tema">
-                    <svg id="sun-icon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <header class="bg-surface border-b border-border py-3 md:py-6">
+        <div class="container mx-auto px-3 md:px-4 flex items-center justify-between gap-2">
+            <div class="flex-shrink-0">
+                <button id="theme-toggle" class="p-2 md:p-2.5 rounded-lg hover:bg-surface-elevated transition-all" title="Cambiar tema">
+                    <svg id="sun-icon" class="w-5 h-5 md:w-6 md:h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
                     </svg>
-                    <svg id="moon-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg id="moon-icon" class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
                     </svg>
                 </button>
+            </div>
+            <h1 class="text-lg md:text-xl lg:text-2xl font-bold text-center whitespace-nowrap">Presupuesto</h1>
+            <div class="flex-shrink-0">
+                <div id="profile-selector"></div>
             </div>
         </div>
     </header>
 
     <main class="container mx-auto px-4 py-8">
         <!-- Resumen Cards -->
-        <section class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div class="bg-surface rounded-xl p-6 border border-border shadow-lg card-hover transition-all">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
-                        <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 mb-6 md:mb-8">
+            <div class="bg-surface rounded-lg md:rounded-xl p-3 md:p-6 border border-border shadow-lg card-hover transition-all">
+                <div class="flex items-center gap-2 md:gap-3">
+                    <div class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
+                        <svg class="w-4 h-4 md:w-5 md:h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                     </div>
-                    <div>
-                        <p class="text-text-secondary text-sm">Balance Total</p>
-                        <p id="balance-total" class="text-2xl font-bold">$0.00</p>
+                    <div class="min-w-0">
+                        <p class="text-text-secondary text-xs md:text-sm">Balance</p>
+                        <p id="balance-total" class="text-xl md:text-2xl font-bold truncate">$0</p>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-surface rounded-xl p-6 border border-border shadow-lg card-hover transition-all">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-income/20 flex items-center justify-center">
-                        <svg class="w-5 h-5 text-income" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="bg-surface rounded-lg md:rounded-xl p-3 md:p-6 border border-border shadow-lg card-hover transition-all">
+                <div class="flex items-center gap-2 md:gap-3">
+                    <div class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-income/20 flex items-center justify-center">
+                        <svg class="w-4 h-4 md:w-5 md:h-5 text-income" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"/>
                         </svg>
                     </div>
-                    <div>
-                        <p class="text-text-secondary text-sm">Total Ingresos</p>
-                        <p id="total-ingresos" class="text-2xl font-bold text-income">$0.00</p>
+                    <div class="min-w-0">
+                        <p class="text-text-secondary text-xs md:text-sm">Ingresos</p>
+                        <p id="total-ingresos" class="text-xl md:text-2xl font-bold text-income truncate">$0</p>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-surface rounded-xl p-6 border border-border shadow-lg card-hover transition-all">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-expense/20 flex items-center justify-center">
-                        <svg class="w-5 h-5 text-expense" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="bg-surface rounded-lg md:rounded-xl p-3 md:p-6 border border-border shadow-lg card-hover transition-all">
+                <div class="flex items-center gap-2 md:gap-3">
+                    <div class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-expense/20 flex items-center justify-center">
+                        <svg class="w-4 h-4 md:w-5 md:h-5 text-expense" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 13l-5 5m0 0l-5-5m5 5V6"/>
                         </svg>
                     </div>
-                    <div>
-                        <p class="text-text-secondary text-sm">Total Gastos</p>
-                        <p id="total-gastos" class="text-2xl font-bold text-expense">$0.00</p>
+                    <div class="min-w-0">
+                        <p class="text-text-secondary text-xs md:text-sm">Gastos</p>
+                        <p id="total-gastos" class="text-xl md:text-2xl font-bold text-expense truncate">$0</p>
                     </div>
                 </div>
             </div>
@@ -305,44 +332,44 @@
         <!-- Formulario y Gráfico -->
         <section class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
             <!-- Formulario -->
-            <div class="bg-surface rounded-xl p-6 border border-border shadow-lg">
-                <h2 class="text-xl font-semibold mb-6">Agregar Transacción</h2>
-                <form id="transaction-form" class="space-y-4">
+            <div class="bg-surface rounded-xl p-4 md:p-6 border border-border shadow-lg">
+                <h2 class="text-lg md:text-xl font-semibold mb-4 md:mb-6">Agregar Transacción</h2>
+                <form id="transaction-form" class="space-y-3 md:space-y-4">
                     <div>
-                        <label for="descripcion" class="block text-sm text-text-secondary mb-2">Descripción</label>
+                        <label for="descripcion" class="block text-sm text-text-secondary mb-1.5 md:mb-2">Descripción</label>
                         <input
                             type="text"
                             id="descripcion"
                             name="descripcion"
                             required
                             maxlength="100"
-                            placeholder="Ej: Salario, Rentación, Comida..."
-                            class="w-full px-4 py-3 rounded-lg input-dark transition-all"
+                            placeholder="Ej: Salario, Arriendo..."
+                            class="w-full px-3 md:px-4 py-3 md:py-3.5 rounded-lg input-dark transition-all text-base md:text-sm"
                         >
                     </div>
 
                     <div>
-                        <label for="monto" class="block text-sm text-text-secondary mb-2">Monto</label>
+                        <label for="monto" class="block text-sm text-text-secondary mb-1.5 md:mb-2">Monto</label>
                         <input
                             type="text"
                             id="monto"
                             name="monto"
                             required
                             inputmode="numeric"
-                            placeholder="Ej: 1.000"
-                            class="w-full px-4 py-3 rounded-lg input-dark transition-all"
+                            placeholder="Ej: 1.000.000"
+                            class="w-full px-3 md:px-4 py-3 md:py-3.5 rounded-lg input-dark transition-all text-base md:text-sm"
                         >
                     </div>
 
                     <div>
-                        <label for="categoria" class="block text-sm text-text-secondary mb-2">Categoría</label>
+                        <label for="categoria" class="block text-sm text-text-secondary mb-1.5 md:mb-2">Categoría</label>
                         <select
                             id="categoria"
                             name="categoria"
                             required
-                            class="w-full px-4 py-3 rounded-lg input-dark transition-all"
+                            class="w-full px-3 md:px-4 py-3 md:py-3.5 rounded-lg input-dark transition-all text-base md:text-sm"
                         >
-                            <option value="">Seleccionar categoría</option>
+                            <option value="">Seleccionar...</option>
                             <option value="Vivienda">Vivienda</option>
                             <option value="Comida">Comida</option>
                             <option value="Transporte">Transporte</option>
@@ -354,69 +381,67 @@
                         </select>
                     </div>
 
-                    <div>
-                        <label class="block text-sm text-text-secondary mb-3">Tipo de Transacción</label>
-                        <div class="flex gap-4">
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="radio" name="tipo" value="ingreso" class="w-4 h-4 text-income accent-income" checked>
-                                <span class="text-income font-medium">Ingreso</span>
+                    <div class="py-1 md:py-0">
+                        <label class="block text-sm text-text-secondary mb-2 md:mb-3">Tipo</label>
+                        <div class="flex gap-3 md:gap-4">
+                            <label class="flex items-center gap-2 cursor-pointer py-2 px-3 rounded-lg hover:bg-surface-elevated transition-all flex-1 justify-center">
+                                <input type="radio" name="tipo" value="ingreso" class="w-5 h-5 text-income accent-income" checked>
+                                <span class="text-income font-medium text-sm md:text-base">Ingreso</span>
                             </label>
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="radio" name="tipo" value="gasto" class="w-4 h-4 text-expense accent-expense">
-                                <span class="text-expense font-medium">Gasto</span>
+                            <label class="flex items-center gap-2 cursor-pointer py-2 px-3 rounded-lg hover:bg-surface-elevated transition-all flex-1 justify-center">
+                                <input type="radio" name="tipo" value="gasto" class="w-5 h-5 text-expense accent-expense">
+                                <span class="text-expense font-medium text-sm md:text-base">Gasto</span>
                             </label>
                         </div>
                     </div>
 
                     <button
                         type="submit"
-                        class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg transition-all mt-6"
+                        class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3.5 md:py-3 px-4 md:px-6 rounded-lg transition-all mt-4 md:mt-6 text-base md:text-sm"
                     >
-                        Agregar Transacción
+                        Agregar
                     </button>
                 </form>
             </div>
 
             <!-- Gráfico -->
-            <div class="bg-surface rounded-xl p-6 border border-border shadow-lg">
-                <h2 class="text-xl font-semibold mb-6">Gastos por Categoría</h2>
-                <div class="relative h-64 md:h-80">
+            <div class="bg-surface rounded-xl p-4 md:p-6 border border-border shadow-lg">
+                <h2 class="text-lg md:text-xl font-semibold mb-4 md:mb-6">Gastos por Categoría</h2>
+                <div class="relative h-52 md:h-80">
                     <canvas id="expense-chart"></canvas>
                 </div>
-                <p id="chart-empty" class="text-center text-text-secondary mt-4 hidden">No hay gastos registrados</p>
+                <p id="chart-empty" class="text-center text-text-secondary mt-4 hidden">Sin gastos registrados</p>
             </div>
         </section>
 
-        
-
         <!-- Tabla de Transacciones -->
-        <section class="bg-surface rounded-xl p-6 border border-border shadow-lg">
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-                <h2 class="text-xl font-semibold">Historial de Transacciones</h2>
-                <div class="flex items-center gap-4">
-                    <select id="sort-select" class="px-3 py-2 rounded-lg bg-surface-elevated border border-border text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <section class="bg-surface rounded-xl p-4 md:p-6 border border-border shadow-lg">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4 md:mb-6 gap-3">
+                <h2 class="text-lg md:text-xl font-semibold">Historial</h2>
+                <div class="flex flex-wrap items-center gap-2 md:gap-4">
+                    <select id="sort-select" class="px-3 py-2 rounded-lg bg-surface-elevated border border-border text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px]">
                         <option value="amount-desc">Mayor monto</option>
                         <option value="amount-asc">Menor monto</option>
                         <option value="date-desc">Más reciente</option>
                         <option value="date-asc">Más antiguo</option>
                     </select>
-                    <button id="reiniciar-mes" class="text-sm text-blue-500 hover:text-blue-400 transition-all">
-                        Reiniciar mes
+                    <button id="reiniciar-mes" class="text-sm text-blue-500 hover:text-blue-400 transition-all py-2 px-3 min-h-[44px] flex items-center">
+                        Reiniciar
                     </button>
                 </div>
             </div>
 
-            <div class="overflow-x-auto">
-                <table class="w-full min-w-600">
+            <div class="overflow-x-auto -mx-4 md:mx-0">
+                <table class="w-full min-w-500 md:min-w-600">
                     <thead>
                         <tr class="border-b border-border">
-                            <th class="text-center py-3 px-4 text-text-secondary font-medium">Check</th>
-                            <th class="text-left py-3 px-4 text-text-secondary font-medium">Fecha</th>
-                            <th class="text-left py-3 px-4 text-text-secondary font-medium">Descripción</th>
-                            <th class="text-left py-3 px-4 text-text-secondary font-medium">Categoría</th>
-                            <th class="text-right py-3 px-4 text-text-secondary font-medium">Monto</th>
-                            <th class="text-center py-3 px-4 text-text-secondary font-medium">Tipo</th>
-                            <th class="text-center py-3 px-4 text-text-secondary font-medium">Acción</th>
+                            <th class="text-center py-2 px-2 md:px-4 text-text-secondary text-xs md:text-sm font-medium">✓</th>
+                            <th class="text-left py-2 px-2 md:px-4 text-text-secondary text-xs md:text-sm font-medium">Fecha</th>
+                            <th class="text-left py-2 px-2 md:px-4 text-text-secondary text-xs md:text-sm font-medium">Descripción</th>
+                            <th class="text-left py-2 px-2 md:px-4 text-text-secondary text-xs md:text-sm font-medium hidden md:table-cell">Categoría</th>
+                            <th class="text-right py-2 px-2 md:px-4 text-text-secondary text-xs md:text-sm font-medium">Monto</th>
+                            <th class="text-center py-2 px-2 md:px-4 text-text-secondary text-xs md:text-sm font-medium hidden md:table-cell">Tipo</th>
+                            <th class="text-center py-2 px-2 md:px-4 text-text-secondary text-xs md:text-sm font-medium">Acción</th>
                         </tr>
                     </thead>
                     <tbody id="transactions-table">
@@ -424,24 +449,24 @@
                 </table>
             </div>
 
-            <p id="table-empty" class="text-center text-text-secondary py-8 hidden">
-                No hay transacciones registradas. ¡Agrega tu primera transacción!
+            <p id="table-empty" class="text-center text-text-secondary py-6 md:py-8 hidden">
+                No hay transacciones aún
             </p>
 
             <!-- Paginación -->
-            <div id="pagination" class="flex items-center justify-between mt-6 pt-4 border-t border-border hidden">
-                <div class="text-sm text-text-secondary">
-                    Mostrando <span id="pagination-start">1</span>-<span id="pagination-end">10</span> de <span id="pagination-total">0</span>
+            <div id="pagination" class="flex flex-col md:flex-row items-center justify-between gap-3 mt-4 md:mt-6 pt-4 border-t border-border hidden">
+                <div class="text-xs md:text-sm text-text-secondary order-2 md:order-1">
+                    <span id="pagination-start">1</span>-<span id="pagination-end">10</span> de <span id="pagination-total">0</span>
                 </div>
-                <div class="flex items-center gap-2">
-                    <button id="prev-page" class="p-2 rounded-lg hover:bg-surface-elevated disabled:opacity-50 disabled:cursor-not-allowed transition-all" disabled>
+                <div class="flex items-center gap-1 md:gap-2 order-1 md:order-2">
+                    <button id="prev-page" class="p-2.5 md:p-2 rounded-lg hover:bg-surface-elevated disabled:opacity-50 disabled:cursor-not-allowed transition-all min-w-[44px] min-h-[44px]" disabled>
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                         </svg>
                     </button>
                     <div id="pagination-pages" class="flex gap-1">
                     </div>
-                    <button id="next-page" class="p-2 rounded-lg hover:bg-surface-elevated disabled:opacity-50 disabled:cursor-not-allowed transition-all" disabled>
+                    <button id="next-page" class="p-2.5 md:p-2 rounded-lg hover:bg-surface-elevated disabled:opacity-50 disabled:cursor-not-allowed transition-all min-w-[44px] min-h-[44px]" disabled>
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                         </svg>

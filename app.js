@@ -756,49 +756,59 @@ class PresupuestoApp {
 
         tbody.innerHTML = transaccionesPagina.map((t, index) => `
             <tr class="border-b border-border/50 hover:bg-surface-elevated transition-all duration-300 row-animate" style="animation-delay: ${index * 30}ms" data-id="${t.id}">
-                <td class="py-3 px-4 text-center">
+                <td class="py-3 px-1 md:px-4 text-center">
                     <input
                         type="checkbox"
                         ${t.pagado ? 'checked' : ''}
                         onchange="app.togglePagado(${t.id})"
-                        class="custom-checkbox"
+                        class="custom-checkbox w-5 h-5"
                     >
                 </td>
-                <td class="py-3 px-4 text-text-secondary text-sm">${this.formatearFecha(t.fecha)}</td>
-                <td class="py-3 px-4">
-                    <span class="font-medium ${t.pagado ? 'line-through opacity-60' : ''}">${this.truncarTexto(t.descripcion)}</span>
-                    ${t.pagado ? '<span class="ml-2 text-xs text-income">✓</span>' : ''}
+                <td class="py-3 px-1 md:px-4 text-text-secondary text-xs md:text-sm whitespace-nowrap">${this.formatearFecha(t.fecha)}</td>
+                <td class="py-3 px-1 md:px-4">
+                    <div class="flex items-center gap-1 md:gap-2">
+                        <span class="font-medium text-sm md:text-base ${t.pagado ? 'line-through opacity-60' : ''}">${this.truncarTexto(t.descripcion, 20)}</span>
+                        ${t.pagado ? '<span class="text-xs text-income">✓</span>' : ''}
+                    </div>
+                    <div class="md:hidden flex items-center gap-2 mt-1">
+                        <span class="px-2 py-0.5 rounded text-xs ${t.tipo === 'ingreso' ? 'bg-income/20 text-income' : 'bg-expense/20 text-expense'}">
+                            ${t.tipo === 'ingreso' ? 'Ingreso' : 'Gasto'}
+                        </span>
+                        <span class="px-1.5 py-0.5 rounded text-xs bg-surface-elevated text-text-secondary">
+                            ${t.categoria}
+                        </span>
+                    </div>
                 </td>
-                <td class="py-3 px-4">
+                <td class="py-3 px-1 md:px-4 hidden md:table-cell">
                     <span class="px-2 py-1 rounded-md text-xs bg-surface-elevated text-text-secondary font-medium">
                         ${t.categoria}
                     </span>
                 </td>
-                <td class="py-3 px-4 text-right font-bold ${t.tipo === 'ingreso' ? 'text-income' : 'text-expense'}">
+                <td class="py-3 px-1 md:px-4 text-right font-bold text-sm md:text-base ${t.tipo === 'ingreso' ? 'text-income' : 'text-expense'}">
                     ${this.formatearMonto(t.monto)}
                 </td>
-                <td class="py-3 px-4 text-center">
+                <td class="py-3 px-1 md:px-4 text-center hidden md:table-cell">
                     <span class="px-3 py-1 rounded-full text-xs font-semibold ${t.tipo === 'ingreso' ? 'bg-income/20 text-income' : 'bg-expense/20 text-expense'}">
                         ${t.tipo === 'ingreso' ? 'Ingreso' : 'Gasto'}
                     </span>
                 </td>
-                <td class="py-3 px-4 text-center">
+                <td class="py-3 px-1 md:px-4 text-center">
                     <div class="flex items-center justify-center gap-1">
                         <button
                             onclick="app.editarTransaccion(${t.id})"
-                            class="tooltip text-blue-500 hover:text-blue-400 hover:bg-blue-500/10 p-2 rounded-lg transition-all duration-200"
+                            class="tooltip text-blue-500 hover:text-blue-400 hover:bg-blue-500/10 p-2 md:p-2 rounded-lg transition-all duration-200 min-w-[36px] min-h-[36px] md:min-w-[32px] md:min-h-[32px] flex items-center justify-center"
                             data-tooltip="Editar"
                         >
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-5 h-5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                             </svg>
                         </button>
                         <button
                             onclick="app.eliminarTransaccion(${t.id})"
-                            class="tooltip text-text-secondary hover:text-expense hover:bg-expense/10 p-2 rounded-lg transition-all duration-200"
+                            class="tooltip text-text-secondary hover:text-expense hover:bg-expense/10 p-2 md:p-2 rounded-lg transition-all duration-200 min-w-[36px] min-h-[36px] md:min-w-[32px] md:min-h-[32px] flex items-center justify-center"
                             data-tooltip="Eliminar"
                         >
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-5 h-5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                             </svg>
                         </button>
