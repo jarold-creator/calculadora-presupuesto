@@ -1,0 +1,44 @@
+# Agentes/skills locales (autoskills)
+.agents/
+skills-lock.json
+
+# Node modules
+node_modules/
+
+# Entornos
+.env
+.env.local
+.env.*.local
+
+# Dependencias generadas
+package-lock.json
+yarn.lock
+
+# Build outputs
+dist/
+build/
+*.min.js
+*.min.css
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# Testing
+coverage/
+
+# Temporary files
+*.tmp
+*.temp
