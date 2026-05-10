@@ -318,17 +318,54 @@
                 min-height: 20px;
             }
         }
+
+        /* Focus visible para accesibilidad */
+        :focus {
+            outline: none;
+        }
+        :focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        /* Botones con focus visible */
+        button:focus-visible {
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.4);
+        }
+
+        /* Inputs con focus visible */
+        input:focus-visible,
+        select:focus-visible {
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.25);
+        }
+
+        /* Reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+            .animate-fade-in,
+            .animate-scale-in,
+            .row-animate,
+            .toast {
+                animation: none;
+            }
+        }
     </style>
 </head>
 <body class="bg-bg text-text-primary min-h-screen">
-    <header class="bg-surface border-b border-border py-3 md:py-6">
-        <div class="container mx-auto px-3 md:px-4 flex items-center justify-between gap-2">
+    <header class="bg-surface border-b border-border py-3 md:py-6" role="banner">
+        <div class="container mx-auto px-3 md:px-4 flex items-center justify-between gap-2" role="navigation" aria-label="Encabezado principal">
             <div class="flex-shrink-0">
-                <button id="theme-toggle" class="p-2 md:p-2.5 rounded-xl hover:bg-surface-elevated transition-all group" title="Cambiar tema">
-                    <svg id="sun-icon" class="w-5 h-5 md:w-6 md:h-6 hidden text-accent transition-all group-hover:rotate-45" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button id="theme-toggle" class="p-2 md:p-2.5 rounded-xl hover:bg-surface-elevated transition-all group" aria-label="Cambiar entre modo claro y oscuro">
+                    <svg id="sun-icon" class="w-5 h-5 md:w-6 md:h-6 hidden text-accent transition-all group-hover:rotate-45" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
                     </svg>
-                    <svg id="moon-icon" class="w-5 h-5 md:w-6 md:h-6 text-accent transition-all group-hover:-rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg id="moon-icon" class="w-5 h-5 md:w-6 md:h-6 text-accent transition-all group-hover:-rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
                     </svg>
                 </button>
@@ -340,7 +377,7 @@
         </div>
     </header>
 
-    <main class="container mx-auto px-4 py-8">
+    <main class="container mx-auto px-4 py-8" role="main" aria-label="Contenido principal">
         <!-- Resumen Cards -->
         <section class="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 mb-6 md:mb-8">
             <div class="bg-surface rounded-xl p-4 md:p-6 border border-border shadow-lg card-hover transition-all">
