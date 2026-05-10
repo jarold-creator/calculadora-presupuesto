@@ -27,12 +27,12 @@
 │  │ - Description input    │ │    (Doughnut Chart)     │   │
 │  │ - Amount input         │ │                         │   │
 │  │ - Category select      │ │                         │   │
-│  │ - Type (Income/Expense)│ │                         │   │
+│  │ - Type (Income/Expense)│ │                        │   │
 │  │ - Submit button        │ │                         │   │
 │  └─────────────────────────┘ └─────────────────────────┘   │
 ├─────────────────────────────────────────────────────────────┤
 │  TABLE SECTION: Dynamic records list                        │
-│  Columns: Date | Description | Category | Amount | Type | X │
+│  Columns: Check | Date | Description | Category | Amount | Type │ Actions │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -46,23 +46,23 @@
 #### Color Palette (Dark Mode)
 | Name | Hex Code | Usage |
 |------|----------|-------|
-| Background | `#0f0f0f` | Page background |
-| Surface | `#1a1a1a` | Cards, form inputs |
-| Surface Elevated | `#252525` | Table rows hover |
-| Border | `#333333` | Subtle borders |
-| Text Primary | `#f5f5f5` | Main text |
-| Text Secondary | `#a0a0a0` | Labels, hints |
-| Accent Primary | `#22c55e` | Income, positive |
-| Accent Danger | `#ef4444` | Expense, negative |
-| Accent Blue | `#3b82f6` | Buttons, links |
+| Background | `#09090b` | Page background |
+| Surface | `#18181b` | Cards, form inputs |
+| Surface Elevated | `#27272a` | Table rows hover |
+| Border | `#3f3f46` | Subtle borders |
+| Text Primary | `#fafafa` | Main text |
+| Text Secondary | `#a1a1aa` | Labels, hints |
+| Income | `#22c55e` | Income, positive |
+| Expense | `#ef4444` | Expense, negative |
+| Accent | `#f59e0b` | Buttons, focus, interactive (amber) |
+| Accent Cyan | `#06b6d4` | Chart category |
 | Accent Purple | `#8b5cf6` | Chart category |
 | Accent Yellow | `#eab308` | Chart category |
-| Accent Cyan | `#06b6d4` | Chart category |
 | Accent Orange | `#f97316` | Chart category |
 | Accent Pink | `#ec4899` | Chart category |
 
 #### Typography
-- **Font Family**: `Inter, system-ui, sans-serif`
+- **Font Family**: `Sora, system-ui, sans-serif`
 - **Headings**:
   - H1: 2rem, font-weight 700
   - H2: 1.5rem, font-weight 600
@@ -75,31 +75,35 @@
 - Spacing scale: 4, 8, 12, 16, 24, 32, 48, 64px
 
 #### Visual Effects
-- Card shadows: `0 4px 6px -1px rgba(0, 0, 0, 0.3)`
-- Border radius: 12px (cards), 8px (inputs/buttons)
-- Transitions: 200ms ease-in-out
+- Card shadows: `0 20px 40px -12px rgba(0, 0, 0, 0.5)`
+- Border radius: 16px (cards), 8px (inputs/buttons)
+- Transitions: 400ms cubic-bezier(0.16, 1, 0.3, 1)
+- Hover effects with glow
+- Gradients on icons
 
 ### Components
 
 #### Header
-- Dark background `#1a1a1a`
-- Centered title "Calculadora de Presupuesto"
-- Subtle bottom border
+- Background `#18181b`
+- Title "Presupuesto" (shortened for mobile)
+- Theme toggle button (sun/moon icons)
+- Profile selector dropdown
+- Role: banner
 
 #### Summary Cards
 - 3 cards in a row (flexbox)
 - Icon + Label + Value
-- Color-coded: Balance (white), Ingresos (green), Gastos (red)
-- Hover: slight scale (1.02)
+- Color-coded: Balance (gradient amber), Ingresos (green), Gastos (red)
+- Hover: translateY(-6px) with glow effect
 
 #### Form Section
 - Dark surface background
 - 4 form fields:
   - Description: text input
-  - Amount: number input (step 0.01)
+  - Amount: number input with thousands separator
   - Category: select dropdown
-  - Type: radio buttons (Ingreso/Gasto)
-- Submit button: blue accent, full width on mobile
+  - Type: radio buttons styled as toggle buttons
+- Submit button: gradient amber, full width
 
 #### Category Options
 ```
@@ -109,7 +113,8 @@ Entretenimiento, Salud, Educación, Otros
 
 #### Table
 - Striped rows (alternating surface colors)
-- Columns: Fecha, Descripción, Categoría, Monto, Tipo, Acción
+- Checkbox column for marking paid
+- Columns: Check | Fecha | Descripción | Categoría | Monto | Tipo | Acción
 - Delete button (red) per row
 - Empty state message when no records
 
@@ -129,24 +134,41 @@ Entretenimiento, Salud, Educación, Otros
    - Generate unique ID (timestamp)
    - Add to beginning of list
    - Save to LocalStorage
+   - Show success toast
 
 2. **Delete Transaction**
-   - Confirmation not required (instant delete)
+   - Confirmation modal required
    - Remove from array and LocalStorage
    - Re-render table and chart
+   - Show success toast
 
-3. **Calculate Totals**
+3. **Edit Transaction**
+   - Modal with pre-filled form
+   - Update existing transaction
+   - Save to LocalStorage
+
+4. **Calculate Totals**
    - Sum all incomes (type: "ingreso")
    - Sum all expenses (type: "gasto")
    - Calculate balance (income - expense)
 
-4. **Persist Data**
-   - Key: `presupuesto_datos`
+5. **Toggle Paid Status**
+   - Checkbox to mark transaction as paid
+   - Visual feedback (strikethrough)
+   - Persist to LocalStorage
+
+6. **Reiniciar Mes**
+   - Mark all transactions as unpaid
+   - Reset checkbox states
+
+7. **Persist Data**
+   - Key: `presupuesto_datos_{perfil}`
    - JSON stringify/parse
    - Load on page init
    - Save on every change
+   - Separate data per profile
 
-5. **Render Chart**
+8. **Render Chart**
    - Group expenses by category
    - Sum amounts per category
    - Update chart data object
@@ -154,35 +176,78 @@ Entretenimiento, Salud, Educación, Otros
 
 ### User Interactions
 - Form submit → Add transaction → Clear form → Update all
-- Delete click → Remove transaction → Update all
-- Page load → Load from LocalStorage → Render all
+- Delete click → Confirmation modal → Remove transaction → Update all
+- Checkbox click → Toggle paid status → Save → Re-render
+- Theme toggle → Switch light/dark mode → Persist preference
+- Profile selector → Switch profile → Load data → Render
+
+### Multi-Profile Support
+- Create new profile
+- Switch between profiles
+- Delete profile (with confirmation)
+- Each profile has isolated data
 
 ### Edge Cases
 - Empty LocalStorage: Show empty state
 - Zero transactions: Hide chart or show "Sin datos"
 - Very long description: Truncate with ellipsis (max 30 chars display)
-- Large numbers: Format with commas (1,000,000.00)
+- Large numbers: Format with commas (1,000,000)
 
-## 4. Acceptance Criteria
+## 4. Accessibility (WCAG 2.2)
+
+### Perceivable
+- Text alternatives for icons (aria-label)
+- Color contrast ratio ≥ 4.5:1 (AA)
+- Focus indicators visible
+
+### Operable
+- Keyboard navigation support
+- Focus visible (:focus-visible)
+- Target size minimum 44px for touch
+- Reduced motion support (@media prefers-reduced-motion)
+
+### Understandable
+- Page language specified (lang="es")
+- Form labels properly associated
+- Error messages with ARIA
+
+### Robust
+- Semantic HTML
+- Landmark regions (banner, navigation, main)
+- ARIA labels on interactive elements
+
+## 5. Acceptance Criteria
 
 ### Visual Checkpoints
-- [ ] Dark mode applied consistently
-- [ ] All cards visible in one row on desktop
-- [ ] Form inputs have proper focus states
-- [ ] Table is scrollable on mobile
-- [ ] Chart renders without errors
+- [x] Dark mode applied consistently
+- [x] All cards visible in one row on desktop
+- [x] Form inputs have proper focus states
+- [x] Table is scrollable on mobile
+- [x] Chart renders without errors
+- [x] Hover effects with glow
+- [x] Gradients on icons
 
 ### Functional Checkpoints
-- [ ] Can add income transaction
-- [ ] Can add expense transaction
-- [ ] Can delete any transaction
-- [ ] Totals update correctly
-- [ ] Chart shows expense categories
-- [ ] Data persists after page reload
+- [x] Can add income transaction
+- [x] Can add expense transaction
+- [x] Can delete any transaction
+- [x] Totals update correctly
+- [x] Chart shows expense categories
+- [x] Data persists after page reload
+- [x] Can edit transactions
+- [x] Multi-profile support works
+- [x] Theme toggle works
 
 ### Technical Checkpoints
-- [ ] Valid HTML5 semantic structure
-- [ ] Tailwind CSS via CDN
-- [ ] Chart.js via CDN
-- [ ] No console errors
-- [ ] Responsive on all breakpoints
+- [x] Valid HTML5 semantic structure
+- [x] Tailwind CSS via CDN
+- [x] Chart.js via CDN
+- [x] No console errors
+- [x] Responsive on all breakpoints
+
+### Accessibility Checkpoints
+- [x] Focus visible for keyboard navigation
+- [x] Reduced motion support
+- [x] Landmarks implemented
+- [x] ARIA labels on buttons
+- [x] Color contrast verified (AA)

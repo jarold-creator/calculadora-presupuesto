@@ -9,6 +9,7 @@ Aplicación web para gestionar finanzas personales con seguimiento de ingresos, 
 - ✅ Editar transacciones existentes
 - ✅ Eliminar transacciones con confirmación
 - ✅ Sistema de checklist para marcar pagos como realizados
+- ✅ Reiniciar mes (marcar todos como no pagados)
 
 ### Visualización
 - ✅ Gráfico doughnut de gastos por categoría (Chart.js)
@@ -22,6 +23,14 @@ Aplicación web para gestionar finanzas personales con seguimiento de ingresos, 
 - ✅ Persistencia de datos en LocalStorage
 - ✅ Alertas/toasts modernos
 - ✅ Tooltips en botones de acción
+
+### Accesibilidad (WCAG 2.2)
+- ✅ Focus visible para navegación por teclado
+- ✅ Reduced motion support (respeta preferencia del sistema)
+- ✅ Landmark regions (banner, navigation, main)
+- ✅ ARIA labels en iconos y botones
+- ✅ Contraste de color verificado (AA compliant)
+- ✅ Target sizes táctiles (44px mínimo)
 
 ### Categorías disponibles
 Vivienda, Comida, Transporte, Servicios, Entretenimiento, Salud, Educación, Otros
@@ -54,14 +63,18 @@ Vivienda, Comida, Transporte, Servicios, Entretenimiento, Salud, Educación, Otr
 5. **Ordenar tabla**:
    - Usa el dropdown para ordenar por monto o fecha
 
+6. **Reiniciar mes**:
+   - Click en "Reiniciar Mes" para marcar todos los pagos como no pagados
+
 ## Estructura de archivos
 
 ```
 calculadora-presupuesto-personal/
-├── index.html    # Estructura y estilos
+├── index.html     # Estructura, estilos y templates
 ├── app.js        # Lógica de la aplicación
-├── SPEC.md       # Especificaciones del proyecto
-└── README.md     # Este archivo
+├── .gitignore   # Archivos ignorados
+├── SPEC.md      # Especificaciones del proyecto
+└── README.md   # Este archivo
 ```
 
 ## Formato de moneda
@@ -72,6 +85,8 @@ calculadora-presupuesto-personal/
 
 ## Notas
 
-- Los datos se guardan automáticamente en el navegador
+- Los datos se guardan automáticamente en el navegador (LocalStorage)
 - Cada perfil tiene sus propios datos aislados
 - El tema (claro/oscuro) es global para todos los perfiles
+- Las animaciones se reducen automáticamente si el usuario tiene "Reduced Motion" activado
+- Cumple con WCAG Nivel A y AA de accesibilidad
