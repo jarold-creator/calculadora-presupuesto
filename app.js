@@ -31,9 +31,27 @@ class PresupuestoApp {
         }
     }
 
+    leerJson(clave, valorPorDefecto) {
+        try {
+            const datos = localStorage.getItem(clave);
+            return datos ? JSON.parse(datos) : valorPorDefecto;
+        } catch (error) {
+            return valorPorDefecto;
+        }
+    }
+
     obtenerPerfiles() {
-        const datos = localStorage.getItem(this.perfilesKey);
-        return datos ? JSON.parse(datos) : [];
+        const perfiles = this.leerJson(this.perfilesKey, []);
+        return Array.isArray(perfiles) ? perfiles : [];
+    }
+
+    escaparHtml(texto) {
+        return String(texto ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
     }
 
     obtenerPerfilActivo() {
@@ -45,12 +63,8 @@ class PresupuestoApp {
     }
 
     cargarDatos() {
-        const datos = localStorage.getItem(this.getStorageKeyPerfil());
-        if (datos) {
-            this.transacciones = JSON.parse(datos);
-        } else {
-            this.transacciones = [];
-        }
+        const datos = this.leerJson(this.getStorageKeyPerfil(), []);
+        this.transacciones = Array.isArray(datos) ? datos : [];
     }
 
     guardarDatos() {
@@ -64,13 +78,24 @@ class PresupuestoApp {
             this.actualizarIconoTema();
         }
 
+        this.actualizarTemaGrafico();
+
         const themeToggle = document.getElementById('theme-toggle');
         themeToggle.addEventListener('click', () => {
             document.body.classList.toggle('light');
             const isLight = document.body.classList.contains('light');
             localStorage.setItem(this.themeKey, isLight ? 'light' : 'dark');
             this.actualizarIconoTema();
+            this.actualizarTemaGrafico();
         });
+    }
+
+    actualizarTemaGrafico() {
+        if (!this.chart) return;
+
+        const esClaro = document.body.classList.contains('light');
+        this.chart.options.plugins.legend.labels.color = esClaro ? '#52525b' : '#a1a1aa';
+        this.chart.update('none');
     }
 
     actualizarIconoTema() {
@@ -90,14 +115,14 @@ class PresupuestoApp {
         const perfiles = this.obtenerPerfiles();
         const activo = this.obtenerPerfilActivo();
 
-        let html = `
+        container.innerHTML = `
             <div class="relative inline-block">
-                <button id="profile-btn" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-surface-elevated transition-all border border-transparent hover:border-border">
-                    <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button id="profile-btn" type="button" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-surface-elevated transition-all border border-transparent hover:border-border" aria-haspopup="true" aria-expanded="false" aria-controls="profile-dropdown">
+                    <svg class="w-5 h-5 text-info" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                     </svg>
-                    <span class="font-medium text-sm">${activo}</span>
-                    <svg class="w-4 h-4 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <span class="font-medium text-sm">${this.escaparHtml(activo)}</span>
+                    <svg class="w-4 h-4 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                     </svg>
                 </button>
@@ -106,15 +131,15 @@ class PresupuestoApp {
                         <p class="text-xs font-medium text-text-secondary uppercase tracking-wider">Mis Perfiles</p>
                     </div>
                     <div class="p-2 max-h-64 overflow-y-auto">
-                        ${perfiles.map(p => `
-                            <div class="flex items-center justify-between group rounded-lg hover:bg-surface-elevated transition-all ${p === activo ? 'bg-blue-500/10' : ''}">
-                                <button onclick="app.cambiarPerfil('${p}')" class="flex-1 text-left px-3 py-2.5 ${p === activo ? 'text-blue-400 font-medium' : ''}">
-                                    ${p}
-                                    ${p === activo ? '<span class="text-xs text-blue-500 ml-2">● Activo</span>' : ''}
+                        ${perfiles.map((p, index) => `
+                            <div class="flex items-center justify-between group rounded-lg hover:bg-surface-elevated transition-all ${p === activo ? 'bg-surface-elevated' : ''}">
+                                <button type="button" data-profile-index="${index}" class="flex-1 text-left px-3 py-2.5 ${p === activo ? 'text-info font-medium' : ''}">
+                                    ${this.escaparHtml(p)}
+                                    ${p === activo ? '<span class="text-xs text-info ml-2">● Activo</span>' : ''}
                                 </button>
                                 ${perfiles.length > 1 ? `
-                                    <button onclick="app.confirmarEliminarPerfil('${p}')" class="opacity-0 group-hover:opacity-100 p-2 text-text-secondary hover:text-expense transition-all" title="Eliminar perfil">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <button type="button" data-delete-profile-index="${index}" class="opacity-0 group-hover:opacity-100 focus:opacity-100 p-2 text-text-secondary hover:text-expense transition-all" aria-label="Eliminar perfil ${this.escaparHtml(p)}" title="Eliminar perfil">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                         </svg>
                                     </button>
@@ -123,8 +148,8 @@ class PresupuestoApp {
                         `).join('')}
                     </div>
                     <div class="p-2 border-t border-border">
-                        <button onclick="app.mostrarCrearPerfil()" class="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg hover:bg-surface-elevated transition-all text-income font-medium">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <button type="button" id="create-profile-btn" class="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg hover:bg-surface-elevated transition-all text-income font-medium">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                             </svg>
                             Crear nuevo perfil
@@ -134,18 +159,30 @@ class PresupuestoApp {
             </div>
         `;
 
-        container.innerHTML = html;
-
         const btn = document.getElementById('profile-btn');
         const dropdown = document.getElementById('profile-dropdown');
+
         btn.addEventListener('click', () => {
-            dropdown.classList.toggle('hidden');
+            const oculto = dropdown.classList.toggle('hidden');
+            btn.setAttribute('aria-expanded', String(!oculto));
         });
 
-        document.addEventListener('click', (e) => {
-            if (!btn.contains(e.target) && !dropdown.contains(e.target)) {
-                dropdown.classList.add('hidden');
-            }
+        container.querySelectorAll('[data-profile-index]').forEach((boton) => {
+            boton.addEventListener('click', () => {
+                const perfil = perfiles[Number(boton.dataset.profileIndex)];
+                if (perfil !== undefined) this.cambiarPerfil(perfil);
+            });
+        });
+
+        container.querySelectorAll('[data-delete-profile-index]').forEach((boton) => {
+            boton.addEventListener('click', () => {
+                const perfil = perfiles[Number(boton.dataset.deleteProfileIndex)];
+                if (perfil !== undefined) this.confirmarEliminarPerfil(perfil);
+            });
+        });
+
+        document.getElementById('create-profile-btn').addEventListener('click', () => {
+            this.mostrarCrearPerfil();
         });
     }
 
@@ -156,29 +193,34 @@ class PresupuestoApp {
             return;
         }
 
+        const focoPrevio = document.activeElement;
         document.getElementById('profile-dropdown').classList.add('hidden');
-        
+        document.getElementById('profile-btn').setAttribute('aria-expanded', 'false');
+
         const modal = document.createElement('div');
-        modal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4';
+        modal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 modal-backdrop';
+        modal.setAttribute('role', 'dialog');
+        modal.setAttribute('aria-modal', 'true');
+        modal.setAttribute('aria-labelledby', 'delete-profile-title');
         modal.innerHTML = `
             <div class="bg-surface rounded-xl p-6 border border-border shadow-xl w-full max-w-sm">
                 <div class="flex items-center gap-4 mb-4">
                     <div class="w-12 h-12 rounded-full bg-expense/20 flex items-center justify-center">
-                        <svg class="w-6 h-6 text-expense" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-6 h-6 text-expense" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                         </svg>
                     </div>
                     <div>
-                        <h3 class="text-lg font-semibold">Eliminar Perfil</h3>
+                        <h3 id="delete-profile-title" class="text-lg font-semibold">Eliminar Perfil</h3>
                         <p class="text-sm text-text-secondary">Esta acción no se puede deshacer</p>
                     </div>
                 </div>
-                <p class="text-text-secondary mb-6">¿Estás seguro de eliminar el perfil "<strong>${nombre}</strong>"? Se perderán todos los datos asociados.</p>
+                <p class="text-text-secondary mb-6">¿Estás seguro de eliminar el perfil "<strong>${this.escaparHtml(nombre)}</strong>"? Se perderán todos los datos asociados.</p>
                 <div class="flex gap-3">
-                    <button onclick="this.closest('.fixed').remove()" class="flex-1 bg-surface-elevated hover:bg-border text-text-primary font-semibold py-3 rounded-lg transition-all">
+                    <button type="button" class="cancel-delete-profile flex-1 bg-surface-elevated hover:bg-border text-text-primary font-semibold py-3 rounded-lg transition-all">
                         Cancelar
                     </button>
-                    <button onclick="app.eliminarPerfil('${nombre}'); this.closest('.fixed').remove()" class="flex-1 bg-expense hover:bg-red-600 text-white font-semibold py-3 rounded-lg transition-all">
+                    <button type="button" class="confirm-delete-profile flex-1 bg-red-700 hover:bg-red-600 text-white font-semibold py-3 rounded-lg transition-all">
                         Eliminar
                     </button>
                 </div>
@@ -186,13 +228,57 @@ class PresupuestoApp {
         `;
         document.body.appendChild(modal);
 
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) modal.remove();
+        const cerrar = () => {
+            modal.remove();
+            document.removeEventListener('keydown', alPresionarTecla);
+            if (focoPrevio && typeof focoPrevio.focus === 'function') focoPrevio.focus();
+        };
+
+        const alPresionarTecla = (e) => {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                cerrar();
+            } else if (e.key === 'Tab') {
+                this.mantenerFocoEnModal(modal, e);
+            }
+        };
+
+        modal.querySelector('.cancel-delete-profile').addEventListener('click', cerrar);
+        modal.querySelector('.confirm-delete-profile').addEventListener('click', () => {
+            modal.remove();
+            document.removeEventListener('keydown', alPresionarTecla);
+            this.eliminarPerfil(nombre);
         });
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) cerrar();
+        });
+        document.addEventListener('keydown', alPresionarTecla);
+        modal.querySelector('.cancel-delete-profile').focus();
+    }
+
+    mantenerFocoEnModal(modal, evento) {
+        const enfocables = Array.from(modal.querySelectorAll(
+            'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )).filter((elemento) => elemento.offsetParent !== null);
+
+        if (enfocables.length === 0) return;
+
+        const primero = enfocables[0];
+        const ultimo = enfocables[enfocables.length - 1];
+        const activo = document.activeElement;
+
+        if (evento.shiftKey && (activo === primero || !modal.contains(activo))) {
+            evento.preventDefault();
+            ultimo.focus();
+        } else if (!evento.shiftKey && (activo === ultimo || !modal.contains(activo))) {
+            evento.preventDefault();
+            primero.focus();
+        }
     }
 
     cambiarPerfil(nombre) {
         localStorage.setItem(this.perfilActivoKey, nombre);
+        this.paginaActual = 1;
         this.cargarDatos();
         this.renderizar();
         this.renderizarSelectorPerfil();
@@ -223,10 +309,6 @@ class PresupuestoApp {
             return;
         }
 
-        if (!confirm(`¿Eliminar el perfil "${nombre}" y todos sus datos?`)) {
-            return;
-        }
-
         localStorage.removeItem(`presupuesto_datos_${nombre}`);
         const nuevosPerfiles = perfiles.filter(p => p !== nombre);
         localStorage.setItem(this.perfilesKey, JSON.stringify(nuevosPerfiles));
@@ -234,6 +316,7 @@ class PresupuestoApp {
         const activo = this.obtenerPerfilActivo();
         if (nombre === activo) {
             localStorage.setItem(this.perfilActivoKey, nuevosPerfiles[0]);
+            this.paginaActual = 1;
         }
 
         this.cargarDatos();
@@ -243,11 +326,14 @@ class PresupuestoApp {
     }
 
     mostrarCrearPerfil() {
+        this.focoPrevioCrearPerfil = document.activeElement;
+        document.getElementById('profile-dropdown').classList.add('hidden');
+        document.getElementById('profile-btn').setAttribute('aria-expanded', 'false');
         document.getElementById('new-profile-name').value = '';
         document.getElementById('create-profile-modal').classList.remove('hidden');
         document.getElementById('create-profile-modal').classList.add('flex');
         document.getElementById('create-profile-modal').querySelector('.bg-surface').classList.add('animate-scale-in');
-        document.getElementById('new-profile-name').focus();
+        setTimeout(() => document.getElementById('new-profile-name').focus(), 50);
     }
 
     cerrarModalCrearPerfil() {
@@ -258,6 +344,10 @@ class PresupuestoApp {
             document.getElementById('create-profile-modal').classList.add('hidden');
             document.getElementById('create-profile-modal').classList.remove('flex');
             modalContent.classList.remove('animate-scale-out');
+            if (this.focoPrevioCrearPerfil) {
+                this.focoPrevioCrearPerfil.focus();
+                this.focoPrevioCrearPerfil = null;
+            }
         }, 200);
     }
 
@@ -351,6 +441,14 @@ class PresupuestoApp {
                 this.cerrarModalEdicion();
             }
         });
+        editModal.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                this.cerrarModalEdicion();
+            } else if (e.key === 'Tab') {
+                this.mantenerFocoEnModal(editModal, e);
+            }
+        });
 
         const editMontoInput = document.getElementById('edit-monto');
         let isEditing = false;
@@ -406,6 +504,45 @@ class PresupuestoApp {
                 this.cerrarModalCrearPerfil();
             }
         });
+        createProfileModal.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                this.cerrarModalCrearPerfil();
+            } else if (e.key === 'Tab') {
+                this.mantenerFocoEnModal(createProfileModal, e);
+            }
+        });
+
+        const tbody = document.getElementById('transactions-table');
+        tbody.addEventListener('change', (e) => {
+            const checkbox = e.target.closest('input[data-action="toggle-paid"]');
+            if (checkbox) {
+                this.togglePagado(Number(checkbox.dataset.id));
+            }
+        });
+        tbody.addEventListener('click', (e) => {
+            const editar = e.target.closest('button[data-action="editar"]');
+            if (editar) {
+                this.editarTransaccion(Number(editar.dataset.id));
+                return;
+            }
+
+            const eliminar = e.target.closest('button[data-action="eliminar"]');
+            if (eliminar) {
+                this.eliminarTransaccion(Number(eliminar.dataset.id));
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            const dropdown = document.getElementById('profile-dropdown');
+            const btn = document.getElementById('profile-btn');
+            if (!dropdown || !btn || dropdown.classList.contains('hidden')) return;
+
+            if (!btn.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.classList.add('hidden');
+                btn.setAttribute('aria-expanded', 'false');
+            }
+        });
     }
 
     agregarTransaccion() {
@@ -425,10 +562,6 @@ class PresupuestoApp {
         if (montoValue) {
             montoInput.value = parseInt(montoValue, 10).toLocaleString('es-CO');
             montoInput.setAttribute('data-raw', montoValue);
-        }
-
-        if (!descripcion || isNaN(monto) || monto <= 0 || !categoria) {
-            return;
         }
 
         const transaccion = {
@@ -452,9 +585,10 @@ class PresupuestoApp {
         const transaccion = this.transacciones.find(t => t.id === id);
         if (!transaccion) return;
 
+        const descripcion = this.escaparHtml(this.truncarTexto(transaccion.descripcion, 40));
         this.mostrarModalConfirmacion(
             'Eliminar Transacción',
-            `¿Estás seguro de eliminar "${this.truncarTexto(transaccion.descripcion, 40)}" por ${this.formatearMonto(transaccion.monto)}?`,
+            `¿Estás seguro de eliminar "${descripcion}" por ${this.formatearMonto(transaccion.monto)}?`,
             () => {
                 this.transacciones = this.transacciones.filter(t => t.id !== id);
                 this.guardarDatos();
@@ -465,26 +599,30 @@ class PresupuestoApp {
     }
 
     mostrarModalConfirmacion(titulo, mensaje, onConfirm) {
+        const focoPrevio = document.activeElement;
         const modal = document.createElement('div');
         modal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 modal-backdrop';
+        modal.setAttribute('role', 'dialog');
+        modal.setAttribute('aria-modal', 'true');
+        modal.setAttribute('aria-labelledby', 'confirm-modal-title');
         modal.innerHTML = `
             <div class="bg-surface rounded-xl p-6 border border-border shadow-xl w-full max-w-sm animate-scale-in">
                 <div class="flex items-center gap-4 mb-4">
                     <div class="w-12 h-12 rounded-full bg-expense/20 flex items-center justify-center flex-shrink-0">
-                        <svg class="w-6 h-6 text-expense" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-6 h-6 text-expense" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                         </svg>
                     </div>
                     <div>
-                        <h3 class="text-lg font-semibold">${titulo}</h3>
+                        <h3 id="confirm-modal-title" class="text-lg font-semibold">${titulo}</h3>
                     </div>
                 </div>
                 <p class="text-text-secondary mb-6">${mensaje}</p>
                 <div class="flex gap-3">
-                    <button class="cancel-confirm flex-1 bg-surface-elevated hover:bg-border text-text-primary font-semibold py-3 rounded-lg transition-all btn-hover">
+                    <button type="button" class="cancel-confirm flex-1 bg-surface-elevated hover:bg-border text-text-primary font-semibold py-3 rounded-lg transition-all btn-hover">
                         Cancelar
                     </button>
-                    <button class="confirm-delete flex-1 bg-expense hover:bg-red-600 text-white font-semibold py-3 rounded-lg transition-all btn-hover">
+                    <button type="button" class="confirm-delete flex-1 bg-red-700 hover:bg-red-600 text-white font-semibold py-3 rounded-lg transition-all btn-hover">
                         Eliminar
                     </button>
                 </div>
@@ -492,18 +630,34 @@ class PresupuestoApp {
         `;
         document.body.appendChild(modal);
 
-        modal.querySelector('.cancel-confirm').addEventListener('click', () => {
+        const cerrar = () => {
             modal.remove();
-        });
+            document.removeEventListener('keydown', alPresionarTecla);
+            if (focoPrevio && typeof focoPrevio.focus === 'function') focoPrevio.focus();
+        };
+
+        const alPresionarTecla = (e) => {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                cerrar();
+            } else if (e.key === 'Tab') {
+                this.mantenerFocoEnModal(modal, e);
+            }
+        };
+
+        modal.querySelector('.cancel-confirm').addEventListener('click', cerrar);
 
         modal.querySelector('.confirm-delete').addEventListener('click', () => {
             modal.remove();
+            document.removeEventListener('keydown', alPresionarTecla);
             onConfirm();
         });
 
         modal.addEventListener('click', (e) => {
-            if (e.target === modal) modal.remove();
+            if (e.target === modal) cerrar();
         });
+        document.addEventListener('keydown', alPresionarTecla);
+        modal.querySelector('.cancel-confirm').focus();
     }
 
     limpiarFormulario() {
@@ -536,15 +690,19 @@ class PresupuestoApp {
         const transaccion = this.transacciones.find(t => t.id === id);
         if (!transaccion) return;
 
+        this.focoPrevioEdicion = document.activeElement;
+        const editMontoInput = document.getElementById('edit-monto');
         document.getElementById('edit-id').value = transaccion.id;
         document.getElementById('edit-descripcion').value = transaccion.descripcion;
-        document.getElementById('edit-monto').value = transaccion.monto.toLocaleString('es-CO');
+        editMontoInput.value = transaccion.monto.toLocaleString('es-CO');
+        editMontoInput.setAttribute('data-raw', String(transaccion.monto));
         document.getElementById('edit-categoria').value = transaccion.categoria;
         document.querySelector(`input[name="edit-tipo"][value="${transaccion.tipo}"]`).checked = true;
 
         document.getElementById('edit-modal').classList.remove('hidden');
         document.getElementById('edit-modal').classList.add('flex');
         document.getElementById('edit-modal').querySelector('.bg-surface').classList.add('animate-scale-in');
+        setTimeout(() => document.getElementById('edit-descripcion').focus(), 50);
     }
 
     cerrarModalEdicion() {
@@ -555,6 +713,10 @@ class PresupuestoApp {
             document.getElementById('edit-modal').classList.add('hidden');
             document.getElementById('edit-modal').classList.remove('flex');
             modalContent.classList.remove('animate-scale-out');
+            if (this.focoPrevioEdicion) {
+                this.focoPrevioEdicion.focus();
+                this.focoPrevioEdicion = null;
+            }
         }, 200);
     }
 
@@ -593,41 +755,46 @@ class PresupuestoApp {
         const tipos = {
             success: {
                 bg: 'bg-income',
-                border: 'border-l-4 border-green-400',
-                icon: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>'
+                texto: 'text-zinc-950',
+                border: 'border-l-4 border-green-700',
+                icon: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>'
             },
             error: {
-                bg: 'bg-expense',
+                bg: 'bg-red-700',
+                texto: 'text-white',
                 border: 'border-l-4 border-red-400',
-                icon: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>'
+                icon: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>'
             },
             warning: {
-                bg: 'bg-yellow-500',
-                border: 'border-l-4 border-yellow-400',
-                icon: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>'
+                bg: 'bg-yellow-400',
+                texto: 'text-zinc-950',
+                border: 'border-l-4 border-yellow-600',
+                icon: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>'
             },
             info: {
-                bg: 'bg-blue-500',
+                bg: 'bg-blue-600',
+                texto: 'text-white',
                 border: 'border-l-4 border-blue-400',
-                icon: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+                icon: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
             }
         };
 
         const config = tipos[tipo] || tipos.success;
 
-        toast.className = `${config.bg} ${config.border} text-white px-4 py-3 rounded-lg shadow-xl flex items-center gap-3 min-w-72 max-w-md toast`;
+        toast.className = `${config.bg} ${config.texto} ${config.border} px-4 py-3 rounded-lg shadow-xl flex items-center gap-3 min-w-72 max-w-md toast`;
         toast.innerHTML = `
             <div class="flex-shrink-0">${config.icon}</div>
             <div class="flex-1">
-                <p class="font-medium text-sm">${mensaje}</p>
+                <p class="font-medium text-sm">${this.escaparHtml(mensaje)}</p>
             </div>
-            <button onclick="this.parentElement.parentElement.remove()" class="flex-shrink-0 hover:opacity-80 transition-opacity">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button type="button" class="toast-close flex-shrink-0 hover:opacity-80 transition-opacity" aria-label="Cerrar notificación">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                 </svg>
             </button>
         `;
 
+        toast.querySelector('.toast-close').addEventListener('click', () => toast.remove());
         container.appendChild(toast);
 
         setTimeout(() => {
@@ -661,7 +828,7 @@ class PresupuestoApp {
 
     formatearFecha(fechaISO) {
         const fecha = new Date(fechaISO);
-        return fecha.toLocaleDateString('es-MX', {
+        return fecha.toLocaleDateString('es-CO', {
             day: '2-digit',
             month: '2-digit',
             year: 'numeric'
@@ -669,8 +836,9 @@ class PresupuestoApp {
     }
 
     truncarTexto(texto, maxLength = 30) {
-        if (texto.length <= maxLength) return texto;
-        return texto.substring(0, maxLength) + '...';
+        const valor = String(texto ?? '');
+        if (valor.length <= maxLength) return valor;
+        return valor.substring(0, maxLength) + '...';
     }
 
     renderizar() {
@@ -699,11 +867,12 @@ class PresupuestoApp {
         animateValue(ingresosEl);
         animateValue(gastosEl);
 
+        const clasesGradiente = ['bg-gradient-to-r', 'from-text-primary', 'to-accent', 'bg-clip-text', 'text-transparent'];
         if (balance >= 0) {
             balanceEl.classList.remove('text-expense');
-            balanceEl.classList.add('text-text-primary');
+            balanceEl.classList.add(...clasesGradiente);
         } else {
-            balanceEl.classList.remove('text-text-primary');
+            balanceEl.classList.remove(...clasesGradiente);
             balanceEl.classList.add('text-expense');
         }
     }
@@ -740,48 +909,56 @@ class PresupuestoApp {
         }
 
         const totalPaginas = Math.ceil(transaccionesOrdenadas.length / this.itemsPorPagina);
-        
+
+        if (this.paginaActual < 1 || this.paginaActual > totalPaginas) {
+            this.paginaActual = 1;
+        }
+
         if (transaccionesOrdenadas.length <= this.itemsPorPagina) {
             pagination.classList.add('hidden');
         } else {
             pagination.classList.remove('hidden');
-            if (this.paginaActual > totalPaginas) {
-                this.paginaActual = 1;
-            }
         }
 
         const inicio = (this.paginaActual - 1) * this.itemsPorPagina;
         const fin = inicio + this.itemsPorPagina;
         const transaccionesPagina = transaccionesOrdenadas.slice(inicio, fin);
 
-        tbody.innerHTML = transaccionesPagina.map((t, index) => `
-            <tr class="border-b border-border/50 hover:bg-surface-elevated transition-all duration-300 row-animate" style="animation-delay: ${index * 30}ms" data-id="${t.id}">
+        tbody.innerHTML = transaccionesPagina.map((t, index) => {
+            const descripcion = this.escaparHtml(this.truncarTexto(t.descripcion, 20));
+            const descripcionLarga = this.escaparHtml(this.truncarTexto(t.descripcion, 40));
+            const categoria = this.escaparHtml(t.categoria);
+
+            return `
+            <tr class="border-b border-border/50 hover:bg-surface-elevated transition-all duration-300 row-animate" style="animation-delay: ${index * 30}ms" data-id="${this.escaparHtml(t.id)}">
                 <td class="py-3 px-1 md:px-4 text-center">
                     <input
                         type="checkbox"
                         ${t.pagado ? 'checked' : ''}
-                        onchange="app.togglePagado(${t.id})"
+                        data-action="toggle-paid"
+                        data-id="${this.escaparHtml(t.id)}"
+                        aria-label="Marcar como pagado: ${descripcionLarga}"
                         class="custom-checkbox w-5 h-5"
                     >
                 </td>
                 <td class="py-3 px-1 md:px-4 text-text-secondary text-xs md:text-sm whitespace-nowrap">${this.formatearFecha(t.fecha)}</td>
                 <td class="py-3 px-1 md:px-4">
                     <div class="flex items-center gap-1 md:gap-2">
-                        <span class="font-medium text-sm md:text-base ${t.pagado ? 'line-through opacity-60' : ''}">${this.truncarTexto(t.descripcion, 20)}</span>
-                        ${t.pagado ? '<span class="text-xs text-income">✓</span>' : ''}
+                        <span class="font-medium text-sm md:text-base ${t.pagado ? 'line-through opacity-60' : ''}">${descripcion}</span>
+                        ${t.pagado ? '<span class="text-xs text-income" aria-hidden="true">✓</span>' : ''}
                     </div>
                     <div class="md:hidden flex items-center gap-2 mt-1">
                         <span class="px-2 py-0.5 rounded text-xs ${t.tipo === 'ingreso' ? 'bg-income/20 text-income' : 'bg-expense/20 text-expense'}">
                             ${t.tipo === 'ingreso' ? 'Ingreso' : 'Gasto'}
                         </span>
                         <span class="px-1.5 py-0.5 rounded text-xs bg-surface-elevated text-text-secondary">
-                            ${t.categoria}
+                            ${categoria}
                         </span>
                     </div>
                 </td>
                 <td class="py-3 px-1 md:px-4 hidden md:table-cell">
                     <span class="px-2 py-1 rounded-md text-xs bg-surface-elevated text-text-secondary font-medium">
-                        ${t.categoria}
+                        ${categoria}
                     </span>
                 </td>
                 <td class="py-3 px-1 md:px-4 text-right font-bold text-sm md:text-base ${t.tipo === 'ingreso' ? 'text-income' : 'text-expense'}">
@@ -795,27 +972,33 @@ class PresupuestoApp {
                 <td class="py-3 px-1 md:px-4 text-center">
                     <div class="flex items-center justify-center gap-1">
                         <button
-                            onclick="app.editarTransaccion(${t.id})"
-                            class="tooltip text-blue-500 hover:text-blue-400 hover:bg-blue-500/10 p-2 md:p-2 rounded-lg transition-all duration-200 min-w-[36px] min-h-[36px] md:min-w-[32px] md:min-h-[32px] flex items-center justify-center"
+                            type="button"
+                            data-action="editar"
+                            data-id="${this.escaparHtml(t.id)}"
+                            aria-label="Editar transacción: ${descripcionLarga}"
+                            class="tooltip text-info hover:bg-surface-elevated p-2 md:p-2 rounded-lg transition-all duration-200 min-w-[36px] min-h-[36px] md:min-w-[32px] md:min-h-[32px] flex items-center justify-center"
                             data-tooltip="Editar"
                         >
-                            <svg class="w-5 h-5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-5 h-5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                             </svg>
                         </button>
                         <button
-                            onclick="app.eliminarTransaccion(${t.id})"
+                            type="button"
+                            data-action="eliminar"
+                            data-id="${this.escaparHtml(t.id)}"
+                            aria-label="Eliminar transacción: ${descripcionLarga}"
                             class="tooltip text-text-secondary hover:text-expense hover:bg-expense/10 p-2 md:p-2 rounded-lg transition-all duration-200 min-w-[36px] min-h-[36px] md:min-w-[32px] md:min-h-[32px] flex items-center justify-center"
                             data-tooltip="Eliminar"
                         >
-                            <svg class="w-5 h-5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-5 h-5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                             </svg>
                         </button>
                     </div>
                 </td>
             </tr>
-        `).join('');
+        `}).join('');
 
         this.actualizarPaginacion(totalPaginas, inicio, fin);
     }
@@ -841,8 +1024,10 @@ class PresupuestoApp {
             ) {
                 pagesHtml += `
                     <button
-                        onclick="app.irPagina(${i})"
-                        class="w-8 h-8 rounded-lg text-sm font-medium transition-all ${i === this.paginaActual ? 'bg-blue-500 text-white' : 'hover:bg-surface-elevated text-text-secondary'}"
+                        type="button"
+                        data-page="${i}"
+                        ${i === this.paginaActual ? 'aria-current="page"' : ''}
+                        class="w-8 h-8 rounded-lg text-sm font-medium transition-all ${i === this.paginaActual ? 'bg-blue-600 text-white' : 'hover:bg-surface-elevated text-text-secondary'}"
                     >
                         ${i}
                     </button>
@@ -855,6 +1040,9 @@ class PresupuestoApp {
             }
         }
         pagesContainer.innerHTML = pagesHtml;
+        pagesContainer.querySelectorAll('button[data-page]').forEach((boton) => {
+            boton.addEventListener('click', () => this.irPagina(Number(boton.dataset.page)));
+        });
 
         prevBtn.onclick = () => {
             if (this.paginaActual > 1) {
@@ -927,10 +1115,10 @@ class PresupuestoApp {
                     legend: {
                         position: 'bottom',
                         labels: {
-                            color: '#a0a0a0',
+                            color: document.body.classList.contains('light') ? '#52525b' : '#a1a1aa',
                             padding: 16,
                             font: {
-                                family: 'Inter',
+                                family: 'Sora',
                                 size: 12
                             }
                         }

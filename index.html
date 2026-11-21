@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calculadora de Presupuesto Personal</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23f59e0b'/%3E%3Ctext x='50' y='70' font-family='sans-serif' font-size='62' font-weight='700' text-anchor='middle' fill='%2309090b'%3E%24%3C/text%3E%3C/svg%3E">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -21,7 +22,8 @@
                         'text-secondary': 'var(--text-secondary)',
                         income: '#22c55e',
                         expense: '#ef4444',
-                        accent: '#f59e0b',
+                        accent: 'rgb(var(--accent-rgb) / <alpha-value>)',
+                        info: 'rgb(var(--info-rgb) / <alpha-value>)',
                         'accent-cyan': '#06b6d4',
                     },
                     fontFamily: {
@@ -44,6 +46,9 @@
             --text-primary: #fafafa;
             --text-secondary: #a1a1aa;
             --accent: #f59e0b;
+            --accent-rgb: 245 158 11;
+            --info: #60a5fa;
+            --info-rgb: 96 165 250;
         }
 
         .light {
@@ -53,7 +58,18 @@
             --border: #e4e4e7;
             --text-primary: #18181b;
             --text-secondary: #71717a;
-            --accent: #d97706;
+            --accent: #b45309;
+            --accent-rgb: 180 83 9;
+            --info: #1d4ed8;
+            --info-rgb: 29 78 216;
+        }
+
+        /* Colores semánticos legibles sobre fondos claros */
+        .light .text-income {
+            color: #15803d;
+        }
+        .light .text-expense {
+            color: #b91c1c;
         }
 
         /* Fondo con gradiente sutil */
@@ -491,7 +507,7 @@
 
                     <button
                         type="submit"
-                        class="w-full bg-gradient-to-r from-accent to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold py-3.5 md:py-3 px-4 md:px-6 rounded-xl transition-all mt-4 md:mt-6 text-base md:text-sm shadow-lg shadow-accent/25 hover:shadow-accent/40"
+                        class="w-full bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-zinc-950 font-semibold py-3.5 md:py-3 px-4 md:px-6 rounded-xl transition-all mt-4 md:mt-6 text-base md:text-sm shadow-lg shadow-accent/25 hover:shadow-accent/40"
                     >
                         Agregar Transacción
                     </button>
@@ -502,7 +518,7 @@
             <div class="bg-surface rounded-xl p-4 md:p-6 border border-border shadow-lg">
                 <h2 class="text-lg md:text-xl font-semibold mb-4 md:mb-6">Gastos por Categoría</h2>
                 <div class="relative h-52 md:h-80">
-                    <canvas id="expense-chart"></canvas>
+                    <canvas id="expense-chart" role="img" aria-label="Gráfico de gastos por categoría"></canvas>
                 </div>
                 <p id="chart-empty" class="text-center text-text-secondary mt-4 hidden">Sin gastos registrados</p>
             </div>
@@ -513,29 +529,32 @@
             <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4 md:mb-6 gap-3">
                 <h2 class="text-lg md:text-xl font-semibold">Historial</h2>
                 <div class="flex flex-wrap items-center gap-2 md:gap-4">
-                    <select id="sort-select" class="px-3 py-2 rounded-lg bg-surface-elevated border border-border text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-accent min-h-[44px]">
+                    <select id="sort-select" aria-label="Ordenar transacciones" class="px-3 py-2 rounded-lg bg-surface-elevated border border-border text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-accent min-h-[44px]">
                         <option value="amount-desc">Mayor monto</option>
                         <option value="amount-asc">Menor monto</option>
                         <option value="date-desc">Más reciente</option>
                         <option value="date-asc">Más antiguo</option>
                     </select>
-                    <button id="reiniciar-mes" class="text-sm text-accent hover:text-amber-400 transition-all py-2 px-3 min-h-[44px] flex items-center font-medium">
+                    <button id="reiniciar-mes" class="text-sm text-accent hover:opacity-75 transition-all py-2 px-3 min-h-[44px] flex items-center font-medium">
                         Reiniciar Mes
                     </button>
                 </div>
             </div>
 
             <div class="overflow-x-auto -mx-4 md:mx-0">
-                <table class="w-full min-w-500 md:min-w-600">
+                <table class="w-full min-w-[500px] md:min-w-[600px]">
                     <thead>
                         <tr class="border-b border-border">
-                            <th class="text-center py-2 px-2 md:px-4 text-text-secondary text-xs md:text-sm font-medium">✓</th>
-                            <th class="text-left py-2 px-2 md:px-4 text-text-secondary text-xs md:text-sm font-medium">Fecha</th>
-                            <th class="text-left py-2 px-2 md:px-4 text-text-secondary text-xs md:text-sm font-medium">Descripción</th>
-                            <th class="text-left py-2 px-2 md:px-4 text-text-secondary text-xs md:text-sm font-medium hidden md:table-cell">Categoría</th>
-                            <th class="text-right py-2 px-2 md:px-4 text-text-secondary text-xs md:text-sm font-medium">Monto</th>
-                            <th class="text-center py-2 px-2 md:px-4 text-text-secondary text-xs md:text-sm font-medium hidden md:table-cell">Tipo</th>
-                            <th class="text-center py-2 px-2 md:px-4 text-text-secondary text-xs md:text-sm font-medium">Acción</th>
+                            <th scope="col" class="text-center py-2 px-2 md:px-4 text-text-secondary text-xs md:text-sm font-medium">
+                                <span aria-hidden="true">✓</span>
+                                <span class="sr-only">Pagado</span>
+                            </th>
+                            <th scope="col" class="text-left py-2 px-2 md:px-4 text-text-secondary text-xs md:text-sm font-medium">Fecha</th>
+                            <th scope="col" class="text-left py-2 px-2 md:px-4 text-text-secondary text-xs md:text-sm font-medium">Descripción</th>
+                            <th scope="col" class="text-left py-2 px-2 md:px-4 text-text-secondary text-xs md:text-sm font-medium hidden md:table-cell">Categoría</th>
+                            <th scope="col" class="text-right py-2 px-2 md:px-4 text-text-secondary text-xs md:text-sm font-medium">Monto</th>
+                            <th scope="col" class="text-center py-2 px-2 md:px-4 text-text-secondary text-xs md:text-sm font-medium hidden md:table-cell">Tipo</th>
+                            <th scope="col" class="text-center py-2 px-2 md:px-4 text-text-secondary text-xs md:text-sm font-medium">Acción</th>
                         </tr>
                     </thead>
                     <tbody id="transactions-table">
@@ -553,15 +572,15 @@
                     <span id="pagination-start">1</span>-<span id="pagination-end">10</span> de <span id="pagination-total">0</span>
                 </div>
                 <div class="flex items-center gap-1 md:gap-2 order-1 md:order-2">
-                    <button id="prev-page" class="p-2.5 md:p-2 rounded-xl hover:bg-surface-elevated disabled:opacity-50 disabled:cursor-not-allowed transition-all min-w-[44px] min-h-[44px]" disabled>
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <button id="prev-page" type="button" aria-label="Página anterior" class="p-2.5 md:p-2 rounded-xl hover:bg-surface-elevated disabled:opacity-50 disabled:cursor-not-allowed transition-all min-w-[44px] min-h-[44px]" disabled>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                         </svg>
                     </button>
                     <div id="pagination-pages" class="flex gap-1">
                     </div>
-                    <button id="next-page" class="p-2.5 md:p-2 rounded-xl hover:bg-surface-elevated disabled:opacity-50 disabled:cursor-not-allowed transition-all min-w-[44px] min-h-[44px]" disabled>
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <button id="next-page" type="button" aria-label="Página siguiente" class="p-2.5 md:p-2 rounded-xl hover:bg-surface-elevated disabled:opacity-50 disabled:cursor-not-allowed transition-all min-w-[44px] min-h-[44px]" disabled>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                         </svg>
                     </button>
@@ -577,9 +596,9 @@
     </footer>
 
     <!-- Modal de Edición -->
-    <div id="edit-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+    <div id="edit-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="edit-modal-title">
         <div class="bg-surface rounded-xl p-6 border border-border shadow-xl w-full max-w-md">
-            <h3 class="text-xl font-semibold mb-6">Editar Transacción</h3>
+            <h3 id="edit-modal-title" class="text-xl font-semibold mb-6">Editar Transacción</h3>
             <form id="edit-form" class="space-y-4">
                 <input type="hidden" id="edit-id">
                 <div>
@@ -588,6 +607,7 @@
                         type="text"
                         id="edit-descripcion"
                         required
+                        maxlength="100"
                         class="w-full px-4 py-3 rounded-lg input-dark transition-all"
                     >
                 </div>
@@ -643,7 +663,7 @@
                     </button>
                     <button
                         type="submit"
-                        class="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg transition-all"
+                        class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all"
                     >
                         Guardar
                     </button>
@@ -653,9 +673,9 @@
     </div>
 
     <!-- Modal Crear Perfil -->
-    <div id="create-profile-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+    <div id="create-profile-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="create-profile-title">
         <div class="bg-surface rounded-xl p-6 border border-border shadow-xl w-full max-w-sm">
-            <h3 class="text-xl font-semibold mb-2">Nuevo Perfil</h3>
+            <h3 id="create-profile-title" class="text-xl font-semibold mb-2">Nuevo Perfil</h3>
             <p class="text-sm text-text-secondary mb-6">Ingresa un nombre para el nuevo perfil</p>
             <form id="create-profile-form">
                 <div class="mb-6">
@@ -663,6 +683,7 @@
                         type="text"
                         id="new-profile-name"
                         required
+                        maxlength="40"
                         placeholder="Ej: Juan, María, Trabajo..."
                         class="w-full px-4 py-3 rounded-lg input-dark transition-all"
                         autocomplete="off"
@@ -688,7 +709,7 @@
     </div>
 
     <!-- Contenedor de Alerts/Toasts -->
-    <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
+    <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2" aria-live="polite" aria-atomic="false"></div>
 
     <script src="app.js"></script>
 </body>

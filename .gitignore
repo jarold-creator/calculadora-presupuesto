@@ -42,3 +42,6 @@ coverage/
 # Temporary files
 *.tmp
 *.temp
+
+# Salidas de Playwright / pruebas locales
+.playwright-mcp/
